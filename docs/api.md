@@ -29,6 +29,16 @@ Success: `201 Created`
 }
 ```
 
+When a custom alias already exists, the API returns `409 Conflict` with the
+existing link:
+
+```json
+{
+  "error": "short code already exists",
+  "short_url": "http://localhost:8080/go-docs"
+}
+```
+
 ## Get link metadata
 
 `GET /api/v1/urls/{code}`

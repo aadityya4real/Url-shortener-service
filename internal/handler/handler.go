@@ -40,6 +40,11 @@ type linkResponse struct {
 	Visits      int64      `json:"visits"`
 }
 
+type conflictResponse struct {
+	Error    string `json:"error"`
+	ShortURL string `json:"short_url"`
+}
+
 func New(service *service.LinkService, db *sql.DB, baseURL string, maxBodyBytes int64) *Handler {
 	return &Handler{
 		service:      service,
@@ -105,6 +110,13 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		ExpiresIn:   time.Duration(request.ExpiresInSeconds) * time.Second,
 	})
 	if err != nil {
+		if errors.Is(err, repository.ErrConflict) && request.CustomAlias != "" {
+			response.JSON(w, http.StatusConflict, conflictResponse{
+				Error:    "short code already exists",
+				ShortURL: h.baseURL + "/" + request.CustomAlias,
+			})
+			return
+		}
 		h.writeServiceError(w, err)
 		return
 	}
@@ -228,7 +240,11 @@ const homePage = `<!doctype html>
           body: JSON.stringify(payload)
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Unable to create link");
+        if (!response.ok) {
+          const error = new Error(data.error || "Unable to create link");
+          error.shortURL = data.short_url;
+          throw error;
+        }
         result.innerHTML = "Short URL: <a href=\"" + data.short_url + "\" target=\"_blank\" rel=\"noopener\"></a>";
         result.querySelector("a").textContent = data.short_url;
       } catch (error) {
@@ -237,6 +253,17 @@ const homePage = `<!doctype html>
         message.id = "error";
         message.textContent = error.message;
         result.appendChild(message);
+        if (error.shortURL) {
+          const linkLine = document.createElement("div");
+          linkLine.textContent = "Existing link: ";
+          const link = document.createElement("a");
+          link.href = error.shortURL;
+          link.target = "_blank";
+          link.rel = "noopener";
+          link.textContent = error.shortURL;
+          linkLine.appendChild(link);
+          result.appendChild(linkLine);
+        }
       }
     });
   </script>

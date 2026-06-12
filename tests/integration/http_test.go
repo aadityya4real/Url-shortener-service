@@ -83,6 +83,45 @@ func TestURLLifecycle(t *testing.T) {
 	}
 }
 
+func TestDuplicateAliasReturnsExistingShortURL(t *testing.T) {
+	app, db := newTestApp(t)
+	defer db.Close()
+
+	body := []byte(`{"url":"https://example.com/first","custom_alias":"existing-link"}`)
+	firstResponse := httptest.NewRecorder()
+	app.ServeHTTP(
+		firstResponse,
+		httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewReader(body)),
+	)
+	if firstResponse.Code != http.StatusCreated {
+		t.Fatalf("first create status = %d, want %d", firstResponse.Code, http.StatusCreated)
+	}
+
+	duplicateBody := []byte(`{"url":"https://example.com/second","custom_alias":"existing-link"}`)
+	duplicateResponse := httptest.NewRecorder()
+	app.ServeHTTP(
+		duplicateResponse,
+		httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewReader(duplicateBody)),
+	)
+	if duplicateResponse.Code != http.StatusConflict {
+		t.Fatalf("duplicate status = %d, want %d", duplicateResponse.Code, http.StatusConflict)
+	}
+
+	var conflict struct {
+		Error    string `json:"error"`
+		ShortURL string `json:"short_url"`
+	}
+	if err := json.NewDecoder(duplicateResponse.Body).Decode(&conflict); err != nil {
+		t.Fatalf("decode conflict response: %v", err)
+	}
+	if conflict.Error != "short code already exists" {
+		t.Fatalf("conflict error = %q", conflict.Error)
+	}
+	if conflict.ShortURL != "http://short.test/existing-link" {
+		t.Fatalf("conflict short_url = %q", conflict.ShortURL)
+	}
+}
+
 func TestReadyEndpoint(t *testing.T) {
 	app, db := newTestApp(t)
 	defer db.Close()
