@@ -64,6 +64,12 @@ go vet ./...
 go build -o bin/url-shortener.exe ./cmd/server
 ```
 
+## Deploy to AWS EC2
+
+The repository includes an Amazon Linux 2023 deployment using Nginx and
+`systemd`. Follow [docs/aws-ec2.md](docs/aws-ec2.md) for the EC2 security
+group, SSH, installation, health-check, and update instructions.
+
 ## Scaling Path
 
 The HTTP, service, and persistence layers are separated intentionally. For a
