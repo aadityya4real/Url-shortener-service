@@ -213,7 +213,7 @@ const homePage = `<!doctype html>
 <body>
   <main>
     <h1>URL Shortener</h1>
-    <p>Create a compact link backed by the Go Service.</p>
+    <p>Create a compact link backed by the Go service.</p>
     <form id="shorten-form">
       <label for="url">Long URL</label>
       <input id="url" type="url" placeholder="https://example.com/long/path" required>
