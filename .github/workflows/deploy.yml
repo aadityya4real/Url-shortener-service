@@ -20,8 +20,17 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/Url-shortener-service
-            git pull origin main
-            go build -o url-shortener ./cmd/server
-            sudo cp url-shortener /usr/local/bin/
-            sudo systemctl restart url-shortener
+            
+  cd ~/Url-shortener-service
+
+  git pull origin main
+
+  go build -o url-shortener.new ./cmd/server
+
+  sudo systemctl stop url-shortener
+
+  sudo mv url-shortener.new /usr/local/bin/url-shortener
+
+  sudo chmod +x /usr/local/bin/url-shortener
+
+  sudo systemctl start url-shortener
