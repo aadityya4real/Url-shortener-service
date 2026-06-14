@@ -1,29 +1,27 @@
 name: Deploy
 
 on:
-push:
-branches:
-- main
+  push:
+    branches:
+      - main
 
 jobs:
-deploy:
-runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-```
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  - name: Deploy to EC2
-    uses: appleboy/ssh-action@v1.0.3
-    with:
-      host: ${{ secrets.EC2_HOST }}
-      username: ${{ secrets.EC2_USER }}
-      key: ${{ secrets.EC2_SSH_KEY }}
-      script: |
-        cd ~/Url-shortener-service
-        git pull origin main
-        go build -o url-shortener ./cmd/server
-        sudo cp url-shortener /usr/local/bin/
-        sudo systemctl restart url-shortener
-```
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/Url-shortener-service
+            git pull origin main
+            go build -o url-shortener ./cmd/server
+            sudo cp url-shortener /usr/local/bin/
+            sudo systemctl restart url-shortener
