@@ -164,8 +164,8 @@ func TestFaviconDoesNotReturnNotFound(t *testing.T) {
 	response := httptest.NewRecorder()
 	app.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/favicon.ico", nil))
 
-	if response.Code != http.StatusNoContent {
-		t.Fatalf("favicon status = %d, want %d", response.Code, http.StatusNoContent)
+	if response.Code != http.StatusOK {
+		t.Fatalf("favicon status = %d, want %d", response.Code, http.StatusOK)
 	}
 }
 

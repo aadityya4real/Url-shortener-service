@@ -2,13 +2,13 @@ package handler
 
 import (
 	"database/sql"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -17,6 +17,9 @@ import (
 	"github.com/aadityya4real/Url-shortener-service/internal/service"
 	"github.com/aadityya4real/Url-shortener-service/pkg/response"
 )
+
+//go:embed static
+var staticEmbedFS embed.FS
 
 type Handler struct {
 	service      *service.LinkService
@@ -81,7 +84,7 @@ func (h *Handler) Routes() http.Handler {
 	mux.HandleFunc("GET /api/v1/user/urls", h.userURLs)
 
 	// Static Files
-	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	mux.Handle("GET /static/", http.FileServer(http.FS(staticEmbedFS)))
 
 	return mux
 }
@@ -96,11 +99,13 @@ func (h *Handler) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) favicon(w http.ResponseWriter, r *http.Request) {
-	if _, err := os.Stat("static/assets/favicon.ico"); err == nil {
-		http.ServeFile(w, r, "static/assets/favicon.ico")
+	data, err := staticEmbedFS.ReadFile("static/assets/favicon.ico")
+	if err != nil {
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	w.Header().Set("Content-Type", "image/x-icon")
+	_, _ = w.Write(data)
 }
 
 func (h *Handler) health(w http.ResponseWriter, _ *http.Request) {
