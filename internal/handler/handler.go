@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -79,6 +80,9 @@ func (h *Handler) Routes() http.Handler {
 	mux.HandleFunc("GET /api/v1/me", h.me)
 	mux.HandleFunc("GET /api/v1/user/urls", h.userURLs)
 
+	// Static Files
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	return mux
 }
 
@@ -91,7 +95,11 @@ func (h *Handler) home(w http.ResponseWriter, r *http.Request) {
 	_, _ = io.WriteString(w, homePage)
 }
 
-func (h *Handler) favicon(w http.ResponseWriter, _ *http.Request) {
+func (h *Handler) favicon(w http.ResponseWriter, r *http.Request) {
+	if _, err := os.Stat("static/assets/favicon.ico"); err == nil {
+		http.ServeFile(w, r, "static/assets/favicon.ico")
+		return
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -373,6 +381,12 @@ const homePage = `<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SnapLink &mdash; Premium URL Shortener</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/assets/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/static/assets/favicon-48x48.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/assets/favicon-180x180.png">
+  <link rel="manifest" href="/static/assets/site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
