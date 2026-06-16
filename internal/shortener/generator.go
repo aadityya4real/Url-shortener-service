@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-const alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+const alphabet = "23456789abcdefghijkmnopqrstuvwxyz"
 
 type Generator struct{}
 

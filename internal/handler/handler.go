@@ -67,7 +67,11 @@ func (h *Handler) Routes() http.Handler {
 	return mux
 }
 
-func (h *Handler) home(w http.ResponseWriter, _ *http.Request) {
+func (h *Handler) home(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		response.Error(w, http.StatusNotFound, "page not found")
+		return
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, _ = io.WriteString(w, homePage)
 }
@@ -89,6 +93,12 @@ func (h *Handler) ready(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	if !strings.HasPrefix(strings.ToLower(contentType), "application/json") {
+		response.Error(w, http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+		return
+	}
+
 	r.Body = http.MaxBytesReader(w, r.Body, h.maxBodyBytes)
 	defer r.Body.Close()
 
@@ -101,6 +111,15 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
 		response.Error(w, http.StatusBadRequest, "request body must contain one JSON object")
+		return
+	}
+
+	if request.ExpiresInSeconds < 0 {
+		response.Error(w, http.StatusBadRequest, "expires_in_seconds cannot be negative")
+		return
+	}
+	if request.ExpiresInSeconds > 9223372036 {
+		response.Error(w, http.StatusBadRequest, "expires_in_seconds is too large")
 		return
 	}
 

@@ -70,18 +70,6 @@ func Migrate(ctx context.Context, db *sql.DB, migrationFS fs.FS) error {
 			continue
 		}
 
-		var applied int
-		if err := db.QueryRowContext(
-			ctx,
-			`SELECT COUNT(1) FROM schema_migrations WHERE name = ?`,
-			entry.Name(),
-		).Scan(&applied); err != nil {
-			return fmt.Errorf("check migration %s: %w", entry.Name(), err)
-		}
-		if applied > 0 {
-			continue
-		}
-
 		script, err := fs.ReadFile(migrationFS, entry.Name())
 		if err != nil {
 			return fmt.Errorf("read migration %s: %w", entry.Name(), err)
@@ -91,6 +79,21 @@ func Migrate(ctx context.Context, db *sql.DB, migrationFS fs.FS) error {
 		if err != nil {
 			return fmt.Errorf("begin migration %s: %w", entry.Name(), err)
 		}
+
+		var applied int
+		if err := tx.QueryRowContext(
+			ctx,
+			`SELECT COUNT(1) FROM schema_migrations WHERE name = ?`,
+			entry.Name(),
+		).Scan(&applied); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("check migration %s: %w", entry.Name(), err)
+		}
+		if applied > 0 {
+			_ = tx.Rollback()
+			continue
+		}
+
 		if _, err := tx.ExecContext(ctx, string(script)); err != nil {
 			_ = tx.Rollback()
 			return fmt.Errorf("apply migration %s: %w", entry.Name(), err)
@@ -102,6 +105,10 @@ func Migrate(ctx context.Context, db *sql.DB, migrationFS fs.FS) error {
 			time.Now().UTC().Format(time.RFC3339Nano),
 		); err != nil {
 			_ = tx.Rollback()
+			if strings.Contains(strings.ToLower(err.Error()), "unique constraint failed") {
+				// Another container applied it concurrently.
+				continue
+			}
 			return fmt.Errorf("record migration %s: %w", entry.Name(), err)
 		}
 		if err := tx.Commit(); err != nil {
