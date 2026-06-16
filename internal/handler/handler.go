@@ -228,6 +228,136 @@ const homePage = `<!doctype html>
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
       --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --toggle-bg: rgba(30, 41, 59, 0.8);
+      --toggle-border: rgba(255,255,255,0.12);
+    }
+
+    :root.light {
+      --bg-primary: #f1f5f9;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(0, 0, 0, 0.08);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --toggle-bg: rgba(226, 232, 240, 0.9);
+      --toggle-border: rgba(0,0,0,0.1);
+    }
+
+    :root.light body {
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.07) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.07) 0%, transparent 45%);
+    }
+
+    :root.light input {
+      background: rgba(241, 245, 249, 0.8);
+      border-color: rgba(0,0,0,0.1);
+      color: var(--text-primary);
+    }
+
+    :root.light input:focus {
+      background: #fff;
+      border-color: var(--accent-indigo);
+    }
+
+    :root.light .glass-card {
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+    }
+
+    :root.light .pill-selector {
+      background: rgba(226, 232, 240, 0.7);
+      border-color: rgba(0,0,0,0.08);
+    }
+
+    :root.light .history-item {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    :root.light .result-card {
+      background: rgba(99, 102, 241, 0.04);
+    }
+
+    :root.light .result-body {
+      background: rgba(241, 245, 249, 0.8);
+      border-color: rgba(0,0,0,0.06);
+    }
+
+    :root.light .copy-btn {
+      background: rgba(0,0,0,0.04);
+      border-color: rgba(0,0,0,0.08);
+      color: var(--text-primary);
+    }
+
+    :root.light .copy-btn:hover {
+      background: rgba(0,0,0,0.09);
+    }
+
+    /* --- Theme Toggle --- */
+    .theme-toggle {
+      position: fixed;
+      top: 18px;
+      right: 22px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--toggle-bg);
+      border: 1px solid var(--toggle-border);
+      border-radius: 50px;
+      padding: 7px 14px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: var(--transition-smooth);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      user-select: none;
+    }
+
+    .theme-toggle:hover {
+      box-shadow: 0 6px 24px rgba(99,102,241,0.25);
+      border-color: rgba(99,102,241,0.3);
+      transform: translateY(-1px);
+    }
+
+    .theme-toggle .icon-sun,
+    .theme-toggle .icon-moon {
+      width: 17px;
+      height: 17px;
+      transition: var(--transition-smooth);
+    }
+
+    .theme-toggle .icon-sun { color: #f59e0b; }
+    .theme-toggle .icon-moon { color: #a78bfa; }
+
+    .theme-toggle .toggle-track {
+      width: 36px;
+      height: 20px;
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-indigo));
+      border-radius: 50px;
+      position: relative;
+      transition: var(--transition-smooth);
+      box-shadow: 0 0 8px rgba(99,102,241,0.4);
+    }
+
+    .theme-toggle .toggle-thumb {
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    :root.light .toggle-thumb {
+      transform: translateX(16px);
+    }
+
+    :root.light .toggle-track {
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      box-shadow: 0 0 8px rgba(245,158,11,0.35);
     }
 
     * {
@@ -648,6 +778,19 @@ const homePage = `<!doctype html>
   </style>
 </head>
 <body>
+  <!-- Theme Toggle -->
+  <button id="theme-toggle" class="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
+    <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+    </svg>
+    <div class="toggle-track">
+      <div class="toggle-thumb"></div>
+    </div>
+    <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    </svg>
+  </button>
+
   <main>
     <header>
       <h1>
@@ -722,6 +865,18 @@ const homePage = `<!doctype html>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      // --- Theme Toggle Logic ---
+      const root = document.documentElement;
+      const toggleBtn = document.getElementById("theme-toggle");
+      const savedTheme = localStorage.getItem("snaplink_theme") || "dark";
+      if (savedTheme === "light") root.classList.add("light");
+
+      toggleBtn.addEventListener("click", () => {
+        const isLight = root.classList.toggle("light");
+        localStorage.setItem("snaplink_theme", isLight ? "light" : "dark");
+      });
+      // --- End Theme Toggle ---
+
       const form = document.querySelector("#shorten-form");
       const resultCard = document.querySelector("#result");
       const historyList = document.querySelector("#history-list");
