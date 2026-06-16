@@ -50,9 +50,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	repo := repository.NewSQLite(db)
-	linkService := service.NewLinkService(repo, shortener.Generator{}, cfg.CodeLength)
-	httpHandler := handler.New(linkService, db, cfg.BaseURL, cfg.MaxBodyBytes)
+	linkRepo := repository.NewSQLiteLink(db)
+	userRepo := repository.NewSQLiteUser(db)
+	sessionRepo := repository.NewSQLiteSession(db)
+
+	userService := service.NewUserService(userRepo, sessionRepo, 24*time.Hour)
+	linkService := service.NewLinkService(linkRepo, shortener.Generator{}, cfg.CodeLength)
+	httpHandler := handler.New(linkService, userService, db, cfg.BaseURL, cfg.MaxBodyBytes)
 	rootHandler := middleware.Chain(
 		httpHandler.Routes(),
 		middleware.RequestID,

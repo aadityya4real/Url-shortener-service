@@ -9,6 +9,7 @@ type Link struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	ExpiresAt   *time.Time `json:"expires_at,omitempty"`
 	Visits      int64      `json:"visits"`
+	UserID      *int64     `json:"user_id,omitempty"`
 }
 
 func (l Link) IsExpired(now time.Time) bool {

@@ -52,6 +52,16 @@ func (r *fakeRepository) Delete(_ context.Context, code string) error {
 	return nil
 }
 
+func (r *fakeRepository) GetByUserID(_ context.Context, userID int64) ([]model.Link, error) {
+	var result []model.Link
+	for _, link := range r.links {
+		if link.UserID != nil && *link.UserID == userID {
+			result = append(result, *link)
+		}
+	}
+	return result, nil
+}
+
 type fixedGenerator struct {
 	code string
 }
@@ -75,8 +85,8 @@ func TestCreateWithGeneratedCode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}
-	if link.Code != "Abcd123" {
-		t.Fatalf("Create() code = %q, want Abcd123", link.Code)
+	if link.Code != "abcd123" {
+		t.Fatalf("Create() code = %q, want abcd123", link.Code)
 	}
 	if link.ExpiresAt == nil || !link.ExpiresAt.Equal(now.Add(time.Hour)) {
 		t.Fatalf("Create() expires_at = %v, want %v", link.ExpiresAt, now.Add(time.Hour))

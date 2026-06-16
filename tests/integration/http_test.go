@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aadityya4real/Url-shortener-service/internal/database"
 	"github.com/aadityya4real/Url-shortener-service/internal/handler"
@@ -181,7 +182,10 @@ func newTestApp(t *testing.T) (http.Handler, *sql.DB) {
 		t.Fatalf("migrate database: %v", err)
 	}
 
-	repo := repository.NewSQLite(db)
-	linkService := service.NewLinkService(repo, shortener.Generator{}, 7)
-	return handler.New(linkService, db, "http://short.test", 1<<20).Routes(), db
+	linkRepo := repository.NewSQLiteLink(db)
+	userRepo := repository.NewSQLiteUser(db)
+	sessionRepo := repository.NewSQLiteSession(db)
+	userService := service.NewUserService(userRepo, sessionRepo, 24*time.Hour)
+	linkService := service.NewLinkService(linkRepo, shortener.Generator{}, 7)
+	return handler.New(linkService, userService, db, "http://short.test", 1<<20).Routes(), db
 }
