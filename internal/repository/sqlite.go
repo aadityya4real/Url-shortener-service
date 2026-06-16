@@ -55,8 +55,8 @@ func (r *SQLiteLinkRepository) GetByCode(ctx context.Context, code string) (*mod
 	return scanLink(row)
 }
 
-func (r *SQLiteLinkRepository) Resolve(ctx context.Context, code string) (*model.Link, error) {
-	now := formatTime(time.Now().UTC())
+func (r *SQLiteLinkRepository) Resolve(ctx context.Context, code string, now time.Time) (*model.Link, error) {
+	nowStr := formatTime(now)
 	row := r.db.QueryRowContext(
 		ctx,
 		`UPDATE links
@@ -64,7 +64,7 @@ func (r *SQLiteLinkRepository) Resolve(ctx context.Context, code string) (*model
 		 WHERE code = ? AND (expires_at IS NULL OR julianday(expires_at) > julianday(?))
 		 RETURNING id, code, original_url, created_at, expires_at, visits, user_id`,
 		code,
-		now,
+		nowStr,
 	)
 	return scanLink(row)
 }

@@ -77,7 +77,7 @@ func (s *LinkService) Create(ctx context.Context, input CreateInput) (*model.Lin
 }
 
 func (s *LinkService) Get(ctx context.Context, code string) (*model.Link, error) { code = strings.ToLower(code); if err := validateCode(code); err != nil { return nil, err }; link, err := s.repository.GetByCode(ctx, code); if err != nil { return nil, err }; if link.IsExpired(s.now().UTC()) { return nil, ErrExpired }; return link, nil }
-func (s *LinkService) Resolve(ctx context.Context, code string) (*model.Link, error) { code = strings.ToLower(code); if err := validateCode(code); err != nil { return nil, err }; link, err := s.repository.Resolve(ctx, code); if errors.Is(err, repository.ErrNotFound) { existing, getErr := s.repository.GetByCode(ctx, code); if getErr == nil && existing.IsExpired(s.now().UTC()) { return nil, ErrExpired } }; return link, err }
+func (s *LinkService) Resolve(ctx context.Context, code string) (*model.Link, error) { code = strings.ToLower(code); if err := validateCode(code); err != nil { return nil, err }; now := s.now().UTC(); link, err := s.repository.Resolve(ctx, code, now); if errors.Is(err, repository.ErrNotFound) { existing, getErr := s.repository.GetByCode(ctx, code); if getErr == nil && existing.IsExpired(now) { return nil, ErrExpired } }; return link, err }
 
 func (s *LinkService) Delete(ctx context.Context, code string, requestingUserID *int64) error {
 	code = strings.ToLower(code)
@@ -99,7 +99,6 @@ func (s *LinkService) Delete(ctx context.Context, code string, requestingUserID 
 func (s *LinkService) GetByUserID(ctx context.Context, userID int64) ([]model.Link, error) {
 	return s.repository.GetByUserID(ctx, userID)
 }
-
 func validateURL(raw string) (string, error) { raw = strings.TrimSpace(raw); if len(raw)==0 || len(raw)>2048 { return "", fmt.Errorf("%w: url must be between 1 and 2048 characters", ErrInvalidInput)}; parsed, err := url.ParseRequestURI(raw); if err != nil || parsed.Host=="" || (parsed.Scheme!="http" && parsed.Scheme!="https") { return "", fmt.Errorf("%w: url must be an absolute http or https URL", ErrInvalidInput)}; return parsed.String(), nil }
 func validateCode(code string) error { if !aliasPattern.MatchString(code) { return fmt.Errorf("%w: invalid short code", ErrInvalidInput)}; return nil }
 func isReservedCode(code string) bool { _, reserved := reservedCodes[strings.ToLower(code)]; return reserved }

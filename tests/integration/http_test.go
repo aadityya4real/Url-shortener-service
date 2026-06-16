@@ -26,6 +26,7 @@ func TestURLLifecycle(t *testing.T) {
 
 	createBody := []byte(`{"url":"https://example.com/articles/1","custom_alias":"article-1"}`)
 	createRequest := httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewReader(createBody))
+	createRequest.Header.Set("Content-Type", "application/json")
 	createResponse := httptest.NewRecorder()
 	app.ServeHTTP(createResponse, createRequest)
 	if createResponse.Code != http.StatusCreated {
@@ -90,20 +91,18 @@ func TestDuplicateAliasReturnsExistingShortURL(t *testing.T) {
 
 	body := []byte(`{"url":"https://example.com/first","custom_alias":"existing-link"}`)
 	firstResponse := httptest.NewRecorder()
-	app.ServeHTTP(
-		firstResponse,
-		httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewReader(body)),
-	)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	app.ServeHTTP(firstResponse, req)
 	if firstResponse.Code != http.StatusCreated {
 		t.Fatalf("first create status = %d, want %d", firstResponse.Code, http.StatusCreated)
 	}
 
 	duplicateBody := []byte(`{"url":"https://example.com/second","custom_alias":"existing-link"}`)
 	duplicateResponse := httptest.NewRecorder()
-	app.ServeHTTP(
-		duplicateResponse,
-		httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewReader(duplicateBody)),
-	)
+	dupReq := httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewReader(duplicateBody))
+	dupReq.Header.Set("Content-Type", "application/json")
+	app.ServeHTTP(duplicateResponse, dupReq)
 	if duplicateResponse.Code != http.StatusConflict {
 		t.Fatalf("duplicate status = %d, want %d", duplicateResponse.Code, http.StatusConflict)
 	}
@@ -188,4 +187,49 @@ func newTestApp(t *testing.T) (http.Handler, *sql.DB) {
 	userService := service.NewUserService(userRepo, sessionRepo, 24*time.Hour)
 	linkService := service.NewLinkService(linkRepo, shortener.Generator{}, 7)
 	return handler.New(linkService, userService, db, "http://short.test", 1<<20).Routes(), db
+}
+
+func TestContentTypeValidation(t *testing.T) {
+	app, db := newTestApp(t)
+	defer db.Close()
+
+	body := []byte(`{"url":"https://example.com"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewReader(body))
+	res := httptest.NewRecorder()
+	app.ServeHTTP(res, req)
+
+	if res.Code != http.StatusUnsupportedMediaType {
+		t.Fatalf("expected status 415, got %d", res.Code)
+	}
+}
+
+func TestExpirationOverflowValidation(t *testing.T) {
+	app, db := newTestApp(t)
+	defer db.Close()
+
+	body := []byte(`{"url":"https://example.com","expires_in_seconds":9223372037}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/urls", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	res := httptest.NewRecorder()
+	app.ServeHTTP(res, req)
+
+	if res.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", res.Code)
+	}
+	if !strings.Contains(res.Body.String(), "expires_in_seconds is too large") {
+		t.Fatalf("unexpected error response body: %s", res.Body.String())
+	}
+}
+
+func TestCatchAllRouteReturns404(t *testing.T) {
+	app, db := newTestApp(t)
+	defer db.Close()
+
+	req := httptest.NewRequest(http.MethodGet, "/nonexistent/subpath", nil)
+	res := httptest.NewRecorder()
+	app.ServeHTTP(res, req)
+
+	if res.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d", res.Code)
+	}
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/aadityya4real/Url-shortener-service/internal/model"
 )
@@ -17,7 +18,7 @@ var (
 type LinkRepository interface {
 	Create(ctx context.Context, link *model.Link) error
 	GetByCode(ctx context.Context, code string) (*model.Link, error)
-	Resolve(ctx context.Context, code string) (*model.Link, error)
+	Resolve(ctx context.Context, code string, now time.Time) (*model.Link, error)
 	Delete(ctx context.Context, code string) error
 	GetByUserID(ctx context.Context, userID int64) ([]model.Link, error)
 }

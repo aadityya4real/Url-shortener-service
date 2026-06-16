@@ -34,7 +34,7 @@ func (r *fakeRepository) GetByCode(_ context.Context, code string) (*model.Link,
 	return &copy, nil
 }
 
-func (r *fakeRepository) Resolve(ctx context.Context, code string) (*model.Link, error) {
+func (r *fakeRepository) Resolve(ctx context.Context, code string, _ time.Time) (*model.Link, error) {
 	link, err := r.GetByCode(ctx, code)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func TestCreateWithGeneratedCode(t *testing.T) {
 	t.Parallel()
 
 	repo := &fakeRepository{links: make(map[string]*model.Link)}
-	svc := NewLinkService(repo, fixedGenerator{code: "Abcd123"}, 7)
+	svc := NewLinkService(repo, fixedGenerator{code: "abcd123"}, 7)
 	now := time.Date(2026, 6, 13, 12, 0, 0, 0, time.UTC)
 	svc.now = func() time.Time { return now }
 
