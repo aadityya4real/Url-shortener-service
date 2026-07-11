@@ -693,11 +693,11 @@ const homePage = `<!doctype html>
       background: rgba(17, 24, 39, 0.8);
     }
 
-    .split-row {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 18px;
-    }
+   .split-row {
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+    gap: 16px;
+}
 
     @media (max-width: 520px) {
       .split-row {
@@ -705,28 +705,29 @@ const homePage = `<!doctype html>
       }
     }
 
-    .pill-selector {
-      display: flex;
-      background: rgba(17, 24, 39, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 14px;
-      padding: 4px;
-      width: 100%;
-    }
+   .pill-selector {
+    display: flex;
+    background: rgba(17, 24, 39, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 4px;
+    width: 100%;
+    gap: 2px;
+}
 
-    .pill-option {
-      flex: 1;
-      text-align: center;
-      padding: 10px 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: var(--transition-smooth);
-      user-select: none;
-    }
-
+.pill-option {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    user-select: none;
+    white-space: nowrap;
+}
     .pill-option:hover {
       color: var(--text-primary);
       background: rgba(255, 255, 255, 0.04);
@@ -1074,10 +1075,10 @@ const homePage = `<!doctype html>
           <div class="form-group">
             <label>Link Expiry</label>
             <div class="pill-selector">
-              <div class="pill-option active" data-value="0">Never</div>
-              <div class="pill-option" data-value="3600">1 Hour</div>
-              <div class="pill-option" data-value="86400">1 Day</div>
-              <div class="pill-option" data-value="604800">7 Days</div>
+             <div class="pill-option active" data-value="0">Never</div>
+<div class="pill-option" data-value="3600">1 Hour</div>
+<div class="pill-option" data-value="86400">1 Day</div>
+<div class="pill-option" data-value="604800">7 Days</div>
             </div>
           </div>
         </div>
